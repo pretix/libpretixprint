@@ -2,28 +2,46 @@ package eu.pretix.libpretixprint.templating;
 
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.*;
-import eu.pretix.libpretixprint.helpers.BarcodeQR;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.Image;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.ColumnText;
+import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfReader;
+import com.lowagie.text.pdf.PdfWriter;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import eu.pretix.libpretixprint.helpers.BarcodeQR;
 
 import static com.lowagie.text.Utilities.millimetersToPoints;
 
 public class Layout {
     private JSONArray elements;
-    private String background;
+    private InputStream backgroundInputStream;
     private ContentProvider contentProvider;
 
-    public Layout(JSONArray elements, String background, ContentProvider contentProvider) {
+    public Layout(JSONArray elements, String background, ContentProvider contentProvider) throws FileNotFoundException {
+        this(elements, new FileInputStream(background), contentProvider);
+    }
+
+    public Layout(JSONArray elements, InputStream background, ContentProvider contentProvider) {
         this.elements = elements;
-        this.background = background;
+        this.backgroundInputStream = background;
         this.contentProvider = contentProvider;
     }
 
@@ -112,15 +130,15 @@ public class Layout {
         ct.go();
     }
 
-    public void render(String ouputFilename)
+    public void render(String outputFilename)
             throws Exception {
-        PdfReader reader = new PdfReader(background);
+        PdfReader reader = new PdfReader(backgroundInputStream);
         if (reader.getNumberOfPages() < 1) {
             throw new Exception("Background PDF does not have a first page.");
         }
 
         Document document = new Document(reader.getPageSize(1));
-        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(ouputFilename));
+        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(outputFilename));
         document.open();
 
         PdfContentByte cb = writer.getDirectContent();
