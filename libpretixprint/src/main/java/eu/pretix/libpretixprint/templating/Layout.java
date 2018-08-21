@@ -7,7 +7,9 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.RectangleReadOnly;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfContentByte;
@@ -139,12 +141,21 @@ public class Layout {
 
     public void render(OutputStream os)
             throws Exception {
-        PdfReader reader = new PdfReader(backgroundInputStream);
-        if (reader.getNumberOfPages() < 1) {
-            throw new Exception("Background PDF does not have a first page.");
-        }
+        Document document;
+        PdfReader reader = null;
+        if (backgroundInputStream != null) {
+            reader = new PdfReader(backgroundInputStream);
+            if (reader.getNumberOfPages() < 1) {
+                throw new Exception("Background PDF does not have a first page.");
+            }
 
-        Document document = new Document(reader.getPageSize(1));
+            document = new Document(reader.getPageSize(1));
+        } else {
+            document = new Document(new RectangleReadOnly(
+                    (float) 8 * 72,
+                    (float) (3.25 * 72)
+            ));
+        }
         PdfWriter writer = PdfWriter.getInstance(document, os);
         document.open();
 
@@ -153,7 +164,9 @@ public class Layout {
         while(contentProviders.hasNext()) {
             ContentProvider cp = contentProviders.next();
 
-            cb.addTemplate(writer.getImportedPage(reader, 1), 0, 0);
+            if (reader != null) {
+                cb.addTemplate(writer.getImportedPage(reader, 1), 0, 0);
+            }
 
             for (int i = 0; i < elements.length(); i++) {
                 JSONObject obj = elements.getJSONObject(i);
