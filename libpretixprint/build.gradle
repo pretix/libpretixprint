@@ -37,7 +37,7 @@ check.dependsOn jacocoTestReport
 
 dependencies {
     compile 'com.github.librepdf:openpdf:1.0.5'
-    compile 'com.google.zxing:core:3.3.2'
+    compile 'com.google.zxing:core:3.3.3'
 
     // Use older org.json version to have an environment equivalent to the android platform
     compile 'org.json:json:20090211'
