@@ -5,7 +5,7 @@ jdk:
   - openjdk8
 sudo: false
 script:
-    - cd libpretixsync
+    - cd libpretixprint
     - TERM=dumb ./gradlew clean check test build jar jacocoTestReport
     - bash <(curl -s https://codecov.io/bash)
 before_cache:
