@@ -22,6 +22,8 @@ public class Layout {
     private JSONArray elements;
     private InputStream backgroundInputStream;
     private Iterator<ContentProvider> contentProviders;
+    private float default_width = 8f * 72f;
+    private float default_height = 3.25f * 72f;
 
     public Layout(JSONArray elements, String background, Iterator<ContentProvider> contentProvider) throws FileNotFoundException {
         this(elements, new FileInputStream(background), contentProvider);
@@ -31,6 +33,22 @@ public class Layout {
         this.elements = elements;
         this.backgroundInputStream = background;
         this.contentProviders = contentProviders;
+    }
+
+    public float getDefaultWidth() {
+        return default_width;
+    }
+
+    public void setDefaultWidth(float default_width) {
+        this.default_width = default_width;
+    }
+
+    public float getDefaultHeight() {
+        return default_height;
+    }
+
+    public void setDefaultHeight(float default_height) {
+        this.default_height = default_height;
     }
 
     private void drawPoweredBy(JSONObject data, String style, PdfContentByte cb) throws IOException, DocumentException, JSONException {
@@ -158,8 +176,8 @@ public class Layout {
             document = new Document(reader.getPageSize(1));
         } else {
             document = new Document(new RectangleReadOnly(
-                    (float) 8 * 72,
-                    (float) (3.25 * 72)
+                    default_width,
+                    default_height
             ));
         }
         PdfWriter writer = PdfWriter.getInstance(document, os);
