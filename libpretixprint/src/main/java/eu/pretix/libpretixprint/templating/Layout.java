@@ -139,20 +139,23 @@ public class Layout {
                 millimetersToPoints((float) data.getDouble("left")),
                 millimetersToPoints((float) data.getDouble("bottom")) + ycorr,
                 millimetersToPoints((float) (data.getDouble("left") + data.getDouble("width"))),
-                millimetersToPoints((float) (data.getDouble("bottom") + 30)) + ycorr,
-                millimetersToPoints(fontsize),
+                millimetersToPoints((float) (data.getDouble("bottom") + 3000)) + ycorr,
+                fontsize,
                 alignment
         );
         ct.go(true);
 
         // Real rendering
+        // We need to take into account the actual height of the text as well as put in some buffer for floating
+        // point rounding, otherwise lines might go missing.
+        float lineheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, fontsize) - baseFont.getDescentPoint(text, fontsize)) + 0.0001);
         ct.addElement(para);
         ct.setSimpleColumn(
                 millimetersToPoints((float) data.getDouble("left")),
                 millimetersToPoints((float) data.getDouble("bottom")) + ycorr,
                 millimetersToPoints((float) (data.getDouble("left") + data.getDouble("width"))),
-                (float) (millimetersToPoints((float) (data.getDouble("bottom"))) + ct.getLinesWritten() * fontsize) + ycorr,
-                millimetersToPoints(fontsize),
+                millimetersToPoints((float) data.getDouble("bottom")) + ct.getLinesWritten() * lineheight + ycorr,
+                fontsize,
                 alignment
         );
         ct.go();
