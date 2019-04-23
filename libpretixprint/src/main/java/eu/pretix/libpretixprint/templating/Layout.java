@@ -94,7 +94,7 @@ public class Layout {
             style = FontSpecification.Style.BOLDITALIC;
         } else if (data.getBoolean("bold")) {
             style = FontSpecification.Style.BOLD;
-        } else if (data.getBoolean("bold")) {
+        } else if (data.getBoolean("italic")) {
             style = FontSpecification.Style.ITALIC;
         }
 
