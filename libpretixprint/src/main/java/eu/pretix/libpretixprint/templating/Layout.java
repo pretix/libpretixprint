@@ -148,17 +148,37 @@ public class Layout {
         // Real rendering
         // We need to take into account the actual height of the text as well as put in some buffer for floating
         // point rounding, otherwise lines might go missing.
+        cb.saveState();
+
+        double alpha = -1D * data.optDouble("rotation", 0D) * 3.141592653589793D / 180.0D;
+        float cos = (float) Math.cos(alpha);
+        float sin = (float) Math.sin(alpha);
+
         float lineheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, fontsize) - baseFont.getDescentPoint(text, fontsize)) + 0.0001);
         ct.addElement(para);
+        float lly = millimetersToPoints((float) (data.getDouble("bottom")));
+        float ury = millimetersToPoints((float) (data.getDouble("bottom"))) + ct.getLinesWritten() * lineheight;
+        float llx = millimetersToPoints((float) data.getDouble("left"));
+        float ycorrtop = baseFont.getAscentPoint("X", fontsize) - baseFont.getAscentPoint(text, fontsize);
+        if (data.optBoolean("downward", false)) {
+            lly = millimetersToPoints((float) (data.getDouble("bottom"))) - ct.getLinesWritten() * lineheight;
+            ury = millimetersToPoints((float) data.getDouble("bottom"));
+            ycorr = 0;
+        } else {
+            ycorrtop = 0;
+        }
+        cb.concatCTM(cos, sin, -sin, cos, llx, ury);
+
         ct.setSimpleColumn(
-                millimetersToPoints((float) data.getDouble("left")),
-                millimetersToPoints((float) data.getDouble("bottom")) + ycorr,
-                millimetersToPoints((float) (data.getDouble("left") + data.getDouble("width"))),
-                millimetersToPoints((float) data.getDouble("bottom")) + ct.getLinesWritten() * lineheight + ycorr,
+                0,
+                lly - ury - ycorrtop + ycorr,
+                millimetersToPoints((float) data.getDouble("width")),
+                -ycorrtop + ycorr,
                 fontsize,
                 alignment
         );
         ct.go();
+        cb.restoreState();
     }
 
     public void render(String filename)
