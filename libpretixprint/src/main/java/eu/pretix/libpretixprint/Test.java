@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,11 @@ public class Test {
             @Override
             public String getBarcodeContent(String content) {
                 return "asdsdgncvbcövjbhdkfjghd";
+            }
+
+            @Override
+            public InputStream getImageContent(String content) {
+                return null;
             }
         };
         List<ContentProvider> i = new ArrayList<>();

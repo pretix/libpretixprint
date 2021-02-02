@@ -4,10 +4,11 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
-import com.lowagie.text.pdf.codec.Base64;
 import eu.pretix.libpretixprint.helpers.BarcodeQR;
 import eu.pretix.libpretixprint.helpers.EmbeddedLogos;
 import eu.pretix.libpretixprint.helpers.StreamUtils;
+
+import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -77,7 +78,7 @@ public class Layout {
         } else {
             b64data = EmbeddedLogos.POWERED_BY_PRETIX_DARK;
         }
-        Image img = Image.getInstance(Base64.decode(b64data));
+        Image img = Image.getInstance(Base64.decodeBase64(b64data));
         float size = millimetersToPoints((float) data.getDouble("size"));
         img.scalePercent(size * 100f / img.getPlainHeight());
         cb.addImage(
