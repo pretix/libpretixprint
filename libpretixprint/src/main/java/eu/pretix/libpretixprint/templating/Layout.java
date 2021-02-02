@@ -7,6 +7,7 @@ import com.lowagie.text.pdf.*;
 import com.lowagie.text.pdf.codec.Base64;
 import eu.pretix.libpretixprint.helpers.BarcodeQR;
 import eu.pretix.libpretixprint.helpers.EmbeddedLogos;
+import eu.pretix.libpretixprint.helpers.StreamUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,6 +50,24 @@ public class Layout {
 
     public void setDefaultHeight(float default_height) {
         this.default_height = default_height;
+    }
+
+
+    private void drawImage(JSONObject data, InputStream istream, PdfContentByte cb) throws IOException, DocumentException, JSONException {
+        if (istream == null) return;
+        Image img = Image.getInstance(StreamUtils.inputStreamToByteArray(istream));
+        float width = millimetersToPoints((float) data.getDouble("width"));
+        float height = millimetersToPoints((float) data.getDouble("height"));
+        img.scaleToFit(width, height);
+        float x = millimetersToPoints((float) data.getDouble("left"));
+        float y = millimetersToPoints((float) data.getDouble("bottom"));
+        if (img.getScaledWidth() < width) {
+            x += (width - img.getScaledWidth()) / 2.0;
+        }
+        if (img.getScaledHeight() < height) {
+            y += (height - img.getScaledHeight()) / 2.0;
+        }
+        cb.addImage(img, img.getScaledWidth(), 0, 0, img.getScaledHeight(), x, y);
     }
 
     private void drawPoweredBy(JSONObject data, String style, PdfContentByte cb) throws IOException, DocumentException, JSONException {
@@ -221,6 +240,8 @@ public class Layout {
                     drawQrCode(obj, cp.getBarcodeContent(obj.optString("content")), cb);
                 } else if (obj.getString("type").equals("textarea")) {
                     drawTextarea(obj, cp.getTextContent(obj.getString("content"), obj.getString("text")), cb);
+                } else if (obj.getString("type").equals("imagearea")) {
+                    drawImage(obj, cp.getImageContent(obj.getString("content")), cb);
                 } else if (obj.getString("type").equals("poweredby")) {
                     drawPoweredBy(obj, obj.getString("content"), cb);
                 }
