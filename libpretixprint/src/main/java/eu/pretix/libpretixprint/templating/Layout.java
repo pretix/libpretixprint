@@ -92,7 +92,17 @@ public class Layout {
     private void drawQrCode(JSONObject data, String text, boolean nowhitespace, PdfContentByte cb) throws IOException, DocumentException, JSONException {
         Map<EncodeHintType, Object> hints = new HashMap<>();
 
-        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+        // Heuristic to avoid tiny pixel sizes if we can. Error correction doesn't help us below printer resolution ;)
+        if (text.length() > 128) {
+            // Typical size for external or long signed codes
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+        } else if (text.length() > 32) {
+            // Typical size for regular signed codes
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+        } else {
+            // Typical size for random codes
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+        }
 
         BarcodeQR bqr;
         if (nowhitespace) {
