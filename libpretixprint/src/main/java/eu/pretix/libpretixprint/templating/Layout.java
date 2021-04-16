@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import static com.lowagie.text.Utilities.millimetersToInches;
 import static com.lowagie.text.Utilities.millimetersToPoints;
 
 public class Layout {
@@ -88,16 +89,28 @@ public class Layout {
         );
     }
 
-    private void drawQrCode(JSONObject data, String text, PdfContentByte cb) throws IOException, DocumentException, JSONException {
+    private void drawQrCode(JSONObject data, String text, boolean nowhitespace, PdfContentByte cb) throws IOException, DocumentException, JSONException {
         Map<EncodeHintType, Object> hints = new HashMap<>();
+
         hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
 
-        BarcodeQR bqr = new BarcodeQR(
-                text,
-                (int) millimetersToPoints((float) data.getDouble("size")),
-                hints
-        );
-
+        BarcodeQR bqr;
+        if (nowhitespace) {
+            // default rendering starting from pretix 4.0
+            hints.put(EncodeHintType.MARGIN, 0);
+            bqr = new BarcodeQR(
+                    text,
+                    (int) (millimetersToInches((float) data.getDouble("size")) * 600),  // Render barcode at 600 dpi
+                    hints
+            );
+        } else {
+            // legacy rendering
+            bqr = new BarcodeQR(
+                    text,
+                    (int) millimetersToPoints((float) data.getDouble("size")),
+                    hints
+            );
+        }
         float size = millimetersToPoints((float) data.getDouble("size"));
         Image img = bqr.getImage();
         img.scaleToFit(size, size);
@@ -238,7 +251,7 @@ public class Layout {
             for (int i = 0; i < elements.length(); i++) {
                 JSONObject obj = elements.getJSONObject(i);
                 if (obj.getString("type").equals("barcodearea")) {
-                    drawQrCode(obj, cp.getBarcodeContent(obj.optString("content")), cb);
+                    drawQrCode(obj, cp.getBarcodeContent(obj.optString("content")), obj.optBoolean("nowhitespace", false), cb);
                 } else if (obj.getString("type").equals("textarea")) {
                     drawTextarea(obj, cp.getTextContent(obj.getString("content"), obj.getString("text")), cb);
                 } else if (obj.getString("type").equals("imagearea")) {
