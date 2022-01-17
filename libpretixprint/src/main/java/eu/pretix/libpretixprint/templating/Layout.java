@@ -7,13 +7,14 @@ import com.lowagie.text.pdf.*;
 import eu.pretix.libpretixprint.helpers.BarcodeQR;
 import eu.pretix.libpretixprint.helpers.EmbeddedLogos;
 import eu.pretix.libpretixprint.helpers.StreamUtils;
+import eu.pretix.libpretixprint.helpers.codec.binary.Base64;
 
-import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class Layout {
         } else {
             b64data = EmbeddedLogos.POWERED_BY_PRETIX_DARK;
         }
-        Image img = Image.getInstance(Base64.decodeBase64(b64data));
+        Image img = Image.getInstance(Base64.decodeBase64(b64data.getBytes(StandardCharsets.UTF_8)));
         float size = millimetersToPoints((float) data.getDouble("size"));
         img.scalePercent(size * 100f / img.getPlainHeight());
         cb.addImage(
