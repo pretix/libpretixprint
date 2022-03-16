@@ -247,6 +247,8 @@ public class Layout {
                     default_height
             ));
         }
+        int pagecount = reader != null ? reader.getNumberOfPages() : 1;
+        boolean firstPage = true;
         PdfWriter writer = PdfWriter.getInstance(document, os);
         document.open();
 
@@ -255,24 +257,37 @@ public class Layout {
         while (contentProviders.hasNext()) {
             ContentProvider cp = contentProviders.next();
 
-            if (reader != null) {
-                cb.addTemplate(writer.getImportedPage(reader, 1), 0, 0);
-            }
-
-            for (int i = 0; i < elements.length(); i++) {
-                JSONObject obj = elements.getJSONObject(i);
-                if (obj.getString("type").equals("barcodearea")) {
-                    drawQrCode(obj, cp.getBarcodeContent(obj.optString("content")), obj.optBoolean("nowhitespace", false), cb);
-                } else if (obj.getString("type").equals("textarea")) {
-                    drawTextarea(obj, cp.getTextContent(obj.getString("content"), obj.getString("text")), cb);
-                } else if (obj.getString("type").equals("imagearea")) {
-                    drawImage(obj, cp.getImageContent(obj.getString("content")), cb);
-                } else if (obj.getString("type").equals("poweredby")) {
-                    drawPoweredBy(obj, obj.getString("content"), cb);
+            for (int pagenum = 0; pagenum < pagecount; pagenum++) {
+                if (firstPage) {
+                    firstPage = false;
+                } else {
+                    document.newPage();
                 }
-            }
-            if (contentProviders.hasNext()) {
-                document.newPage();
+
+                if (reader != null) {
+                    document.setPageSize(reader.getPageSize(pagenum + 1));
+                    cb.addTemplate(writer.getImportedPage(reader, pagenum + 1), 0, 0);
+                }
+
+                for (int i = 0; i < elements.length(); i++) {
+                    JSONObject obj = elements.getJSONObject(i);
+                    if (obj.optInt("page", 1) != pagenum + 1) {
+                        continue;
+                    }
+                    if (obj.getString("type").equals("barcodearea")) {
+                        String content = cp.getBarcodeContent(obj.optString("content"), obj.getString("text"), obj.optJSONObject("text_i18n"));
+                        if (content.isEmpty()) {
+                            content = " ";  // ZXing crashes when asked to draw empty QR codes
+                        }
+                        drawQrCode(obj, content, obj.optBoolean("nowhitespace", false), cb);
+                    } else if (obj.getString("type").equals("textarea")) {
+                        drawTextarea(obj, cp.getTextContent(obj.getString("content"), obj.getString("text"), obj.optJSONObject("text_i18n")), cb);
+                    } else if (obj.getString("type").equals("imagearea")) {
+                        drawImage(obj, cp.getImageContent(obj.getString("content")), cb);
+                    } else if (obj.getString("type").equals("poweredby")) {
+                        drawPoweredBy(obj, obj.getString("content"), cb);
+                    }
+                }
             }
         }
         document.close();

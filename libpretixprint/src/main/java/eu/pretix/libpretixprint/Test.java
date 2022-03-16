@@ -7,6 +7,7 @@ import eu.pretix.libpretixprint.templating.FontSpecification;
 import eu.pretix.libpretixprint.templating.Layout;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,12 +22,12 @@ public class Test {
         FontRegistry.getInstance().add("Open Sans", FontSpecification.Style.REGULAR, "/home/raphael/proj/pretix/src/pretix/static/fonts/OpenSans-Regular.ttf");
         ContentProvider cp = new ContentProvider() {
             @Override
-            public String getTextContent(String content, String text) {
+            public String getTextContent(String content, String text, JSONObject textI18n) {
                 return text;
             }
 
             @Override
-            public String getBarcodeContent(String content) {
+            public String getBarcodeContent(String content, String text, JSONObject textI18n) {
                 return "asdsdgncvbcövjbhdkfjghd";
             }
 
