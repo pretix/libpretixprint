@@ -275,13 +275,13 @@ public class Layout {
                         continue;
                     }
                     if (obj.getString("type").equals("barcodearea")) {
-                        String content = cp.getBarcodeContent(obj.optString("content"), obj.getString("text"), obj.optJSONObject("text_i18n"));
+                        String content = cp.getBarcodeContent(obj.optString("content"), obj.optString("text", ""), obj.optJSONObject("text_i18n"));
                         if (content.isEmpty()) {
                             content = " ";  // ZXing crashes when asked to draw empty QR codes
                         }
                         drawQrCode(obj, content, obj.optBoolean("nowhitespace", false), cb);
                     } else if (obj.getString("type").equals("textarea")) {
-                        drawTextarea(obj, cp.getTextContent(obj.getString("content"), obj.getString("text"), obj.optJSONObject("text_i18n")), cb);
+                        drawTextarea(obj, cp.getTextContent(obj.getString("content"), obj.optString("text", ""), obj.optJSONObject("text_i18n")), cb);
                     } else if (obj.getString("type").equals("imagearea")) {
                         drawImage(obj, cp.getImageContent(obj.getString("content")), cb);
                     } else if (obj.getString("type").equals("poweredby")) {
