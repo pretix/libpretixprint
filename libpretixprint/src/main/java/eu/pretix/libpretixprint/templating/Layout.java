@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.awt.Color;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -225,6 +226,13 @@ public class Layout {
         cb.restoreState();
     }
 
+    private void drawWhiteBackground(Rectangle pageSize, PdfContentByte cb) throws DocumentException {
+        Rectangle r = new Rectangle(pageSize);
+        r.setBackgroundColor(Color.WHITE);
+        r.setBorder(Rectangle.NO_BORDER);
+        cb.rectangle(r);
+    }
+
     public void render(String filename)
             throws Exception {
         render(new FileOutputStream(filename));
@@ -266,6 +274,9 @@ public class Layout {
 
                 if (reader != null) {
                     document.setPageSize(reader.getPageSize(pagenum + 1));
+                }
+                drawWhiteBackground(document.getPageSize(), cb);
+                if (reader != null) {
                     cb.addTemplate(writer.getImportedPage(reader, pagenum + 1), 0, 0);
                 }
 
