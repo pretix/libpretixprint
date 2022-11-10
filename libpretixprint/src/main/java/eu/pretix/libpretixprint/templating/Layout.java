@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import java.awt.Color;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -162,6 +163,7 @@ public class Layout {
         ColumnText ct = new ColumnText(cb);
 
         text = text.replaceAll("<br[^>]*>", "\n");
+        text = Normalizer.normalize(text, Normalizer.Form.NFKC);
         Paragraph para = new Paragraph(text, font);
         int alignment = 0;
         if (data.getString("align").equals("left")) {
