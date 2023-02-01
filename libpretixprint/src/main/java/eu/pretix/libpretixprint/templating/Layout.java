@@ -175,7 +175,13 @@ public class Layout {
         }
         para.setAlignment(alignment);
 
-        para.setLeading(fontsize);
+        float lineheight;
+        if (data.has("lineheight")) {
+            lineheight = (float) (data.getDouble("lineheight") * 1.15);
+        } else {
+            lineheight = 1;
+        }
+        para.setLeading(lineheight * fontsize);
 
         // Position with lower bound of "x" instead of lower bound of text, to be consistent with other implementations
         float ycorr = baseFont.getDescentPoint("x", fontsize) - baseFont.getDescentPoint(text, fontsize);
@@ -201,30 +207,52 @@ public class Layout {
         float cos = (float) Math.cos(alpha);
         float sin = (float) Math.sin(alpha);
 
-        float lineheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, fontsize) - baseFont.getDescentPoint(text, fontsize)) + 0.0001);
+        float adheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, fontsize) - baseFont.getDescentPoint(text, fontsize)) + 0.0001);
+        float adheightPlusLH = adheight;
+        if (lineheight != 1) {
+            adheightPlusLH += (lineheight - 1.0) * fontsize;
+        }
         ct.addElement(para);
-        float lly = millimetersToPoints((float) (data.getDouble("bottom")));
-        float ury = millimetersToPoints((float) (data.getDouble("bottom"))) + ct.getLinesWritten() * lineheight;
-        float llx = millimetersToPoints((float) data.getDouble("left"));
+        float lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom")));
+        float upperRightY = millimetersToPoints((float) (data.getDouble("bottom"))) + ct.getLinesWritten() * adheightPlusLH;
+        float lowerLeftX = millimetersToPoints((float) data.getDouble("left"));
         float ycorrtop = baseFont.getAscentPoint("X", fontsize) - baseFont.getAscentPoint(text, fontsize);
         if (data.optBoolean("downward", false)) {
-            lly = millimetersToPoints((float) (data.getDouble("bottom"))) - ct.getLinesWritten() * lineheight;
-            ury = millimetersToPoints((float) data.getDouble("bottom"));
+            lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom"))) - ct.getLinesWritten() * adheightPlusLH;
+            upperRightY = millimetersToPoints((float) data.getDouble("bottom"));
             ycorr = 0;
+
+            if (lineheight != 1) {
+                ycorr += (lineheight - 1.0) * fontsize;
+            }
+
         } else {
             ycorrtop = 0;
         }
-        cb.concatCTM(cos, sin, -sin, cos, llx, ury);
+        cb.concatCTM(cos, sin, -sin, cos, lowerLeftX, upperRightY);
 
         ct.setSimpleColumn(
                 0,
-                lly - ury - ycorrtop + ycorr,
+                lowerLeftY - upperRightY - ycorrtop + ycorr,
                 millimetersToPoints((float) data.getDouble("width")),
                 -ycorrtop + ycorr,
                 fontsize,
                 alignment
         );
         ct.go();
+
+        /*
+        Uncomment the following if you want to see the bounding box while debuggign
+        cb.rectangle(
+                0,
+                lowerLeftY - upperRightY - ycorrtop + ycorr,
+                millimetersToPoints((float) data.getDouble("width")),
+                -ycorrtop + ycorr - (lowerLeftY - upperRightY - ycorrtop + ycorr)
+        );
+        cb.setColorStroke(Color.RED);
+        cb.stroke();
+        */
+
         cb.restoreState();
     }
 
