@@ -184,7 +184,7 @@ public class Layout {
         para.setLeading(lineheight * fontsize);
 
         // Position with lower bound of "x" instead of lower bound of text, to be consistent with other implementations
-        float ycorr = baseFont.getDescentPoint("x", fontsize) - baseFont.getDescentPoint(text, fontsize);
+        float ycorr = baseFont.getDescentPoint("x", fontsize) - baseFont.getDescentPoint(text + ",;gyjq", fontsize);
 
         // Simulate rendering to obtain real height
         ct.addElement(para);
@@ -207,7 +207,8 @@ public class Layout {
         float cos = (float) Math.cos(alpha);
         float sin = (float) Math.sin(alpha);
 
-        float adheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, fontsize) - baseFont.getDescentPoint(text, fontsize)) + 0.0001);
+        float adheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, fontsize) - baseFont.getDescentPoint(text + ",;gyjq", fontsize)) + 0.0001);
+
         float adheightPlusLH = adheight;
         if (lineheight != 1) {
             adheightPlusLH += (lineheight - 1.0) * fontsize;
