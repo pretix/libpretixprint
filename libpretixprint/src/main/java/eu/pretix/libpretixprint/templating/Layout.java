@@ -93,6 +93,9 @@ public class Layout {
     }
 
     private void drawQrCode(JSONObject data, String text, boolean nowhitespace, PdfContentByte cb) throws IOException, DocumentException, JSONException {
+        if (text.isEmpty()) {
+            return;
+        }
         Map<EncodeHintType, Object> hints = new HashMap<>();
 
         // Heuristic to avoid tiny pixel sizes if we can. Error correction doesn't help us below printer resolution ;)
