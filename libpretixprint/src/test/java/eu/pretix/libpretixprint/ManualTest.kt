@@ -44,5 +44,6 @@ class ManualTest() {
         )
         val outfile = Path(javaClass.getResource("/").path, "textcontainer-test.pdf")
         l.render(outfile.absolutePathString())
+        System.out.println("Out: " + outfile.absolutePathString())
     }
 }

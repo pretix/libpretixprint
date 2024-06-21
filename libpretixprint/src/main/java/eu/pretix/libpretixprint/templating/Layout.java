@@ -24,6 +24,7 @@ import java.util.Map;
 
 import static com.lowagie.text.Utilities.millimetersToInches;
 import static com.lowagie.text.Utilities.millimetersToPoints;
+import static eu.pretix.libpretixprint.templating.TextUtilsKt.linesRequiredHardBreak;
 
 public class Layout {
     private JSONArray elements;
@@ -144,15 +145,15 @@ public class Layout {
         public int alignment;
         public float lineheight;
         public float adheightPlusLH;
-        public BaseFont baseFont;
+        public Font font;
 
-        public ParagraphResult(Paragraph p, double fontSize, int alignment, float lineheight, float adheightPlusLH, BaseFont baseFont) {
+        public ParagraphResult(Paragraph p, double fontSize, int alignment, float lineheight, float adheightPlusLH, Font font) {
             this.p = p;
             this.fontSize = fontSize;
             this.alignment = alignment;
             this.lineheight = lineheight;
             this.adheightPlusLH = adheightPlusLH;
-            this.baseFont = baseFont;
+            this.font = font;
         }
     }
 
@@ -210,7 +211,7 @@ public class Layout {
         if (lineheight != 1) {
             adheightPlusLH += (lineheight - 1.0) * fontsize;
         }
-        return new ParagraphResult(para, fontsize, alignment, lineheight, adheightPlusLH, baseFont);
+        return new ParagraphResult(para, fontsize, alignment, lineheight, adheightPlusLH, font);
     }
 
     private void drawTextcontainer(JSONObject data, String text, PdfContentByte cb) throws IOException, DocumentException, JSONException {
@@ -238,10 +239,12 @@ public class Layout {
             realHeight = 3000000 - ct.getYLine();
             realWidth = ct.getFilledWidth();
 
-            ct.getLinesWritten()
-
-            System.out.println("Text " + text + " font size " + fontSize + " height "  + realHeight + " target " + height + " width " + realWidth + " target " + width);
-            if (!autoresize || (realHeight <= height && realWidth <= width) || fontSize <= 1.0) {
+            var smallEnough = (realHeight <= height && realWidth <= width);
+            if (autoresize && !data.optBoolean("splitlongwords", true)) {
+                smallEnough = smallEnough && !linesRequiredHardBreak(text, para.font, width);
+            }
+            System.out.println("Text " + text + " >font size " + fontSize + " height "  + realHeight + " target " + height + " width " + realWidth + " target " + width + " break " + linesRequiredHardBreak(text, para.font, width));
+            if (!autoresize || smallEnough || fontSize <= 1.0) {
                 break;
             }
             if (realHeight > height) {
@@ -300,7 +303,7 @@ public class Layout {
         ColumnText ct = new ColumnText(cb);
 
         // Position with lower bound of "x" instead of lower bound of text, to be consistent with other implementations
-        float ycorr = para.baseFont.getDescentPoint("x", (float) para.fontSize) - para.baseFont.getDescentPoint(text + ",;gyjq", (float) para.fontSize);
+        float ycorr = para.font.getBaseFont().getDescentPoint("x", (float) para.fontSize) - para.font.getBaseFont().getDescentPoint(text + ",;gyjq", (float) para.fontSize);
 
         // Simulate rendering to obtain real height
         ct.addElement(para.p);
@@ -327,7 +330,7 @@ public class Layout {
         float lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom")));
         float upperRightY = millimetersToPoints((float) (data.getDouble("bottom"))) + ct.getLinesWritten() * para.adheightPlusLH;
         float lowerLeftX = millimetersToPoints((float) data.getDouble("left"));
-        float ycorrtop = para.baseFont.getAscentPoint("X", (float) para.fontSize) - para.baseFont.getAscentPoint(text, (float) para.fontSize);
+        float ycorrtop = para.font.getBaseFont().getAscentPoint("X", (float) para.fontSize) - para.font.getBaseFont().getAscentPoint(text, (float) para.fontSize);
         if (data.optBoolean("downward", false)) {
             lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom"))) - ct.getLinesWritten() * para.adheightPlusLH;
             upperRightY = millimetersToPoints((float) data.getDouble("bottom"));

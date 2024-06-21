@@ -1,6 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'java-library'
     id 'jacoco'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 group 'eu.pretix.pretixdesk'
@@ -11,6 +14,7 @@ version '1.0'
 kotlin {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_11)
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(11))
     }
@@ -22,6 +26,7 @@ java {
         languageVersion.set(JavaLanguageVersion.of(11))
     }
 }
+
 
 jacocoTestReport {
     reports {
