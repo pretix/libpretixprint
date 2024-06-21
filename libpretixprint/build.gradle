@@ -6,7 +6,18 @@ plugins {
 group 'eu.pretix.pretixdesk'
 version '1.0'
 
+
+
+kotlin {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
 java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(11))
     }
@@ -34,3 +45,9 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
 }
+
+task copyTestResources(type: Copy) {
+    from "${projectDir}/src/test/resources", "${projectDir}/src/main/resources"
+    into "${buildDir}/classes/test"
+}
+processTestResources.dependsOn copyTestResources

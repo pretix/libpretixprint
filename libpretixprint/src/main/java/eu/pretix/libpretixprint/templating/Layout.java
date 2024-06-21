@@ -14,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.awt.Color;
+import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
@@ -137,7 +138,25 @@ public class Layout {
         );
     }
 
-    private void drawTextarea(JSONObject data, String text, PdfContentByte cb) throws IOException, DocumentException, JSONException {
+    static class ParagraphResult {
+        public Paragraph p;
+        public double fontSize;
+        public int alignment;
+        public float lineheight;
+        public float adheightPlusLH;
+        public BaseFont baseFont;
+
+        public ParagraphResult(Paragraph p, double fontSize, int alignment, float lineheight, float adheightPlusLH, BaseFont baseFont) {
+            this.p = p;
+            this.fontSize = fontSize;
+            this.alignment = alignment;
+            this.lineheight = lineheight;
+            this.adheightPlusLH = adheightPlusLH;
+            this.baseFont = baseFont;
+        }
+    }
+
+    private ParagraphResult getParagraph(JSONObject data, String text, boolean isLegacy, Double overrideFontSize) throws JSONException {
         FontSpecification.Style style = FontSpecification.Style.REGULAR;
         if (data.getBoolean("bold") && data.getBoolean("italic")) {
             style = FontSpecification.Style.BOLDITALIC;
@@ -147,7 +166,7 @@ public class Layout {
             style = FontSpecification.Style.ITALIC;
         }
 
-        float fontsize = (float) data.getDouble("fontsize");
+        double fontsize = overrideFontSize != null ? overrideFontSize : data.getDouble("fontsize");
 
         FontRegistry fontRegistry = FontRegistry.getInstance();
         BaseFont baseFont = fontRegistry.get(data.getString("fontfamily"), style);
@@ -155,7 +174,7 @@ public class Layout {
             System.out.print("Unable to load font " + data.getString("fontfamily"));
             baseFont = fontRegistry.get("Open Sans", style);
         }
-        Font font = new Font(baseFont, fontsize);
+        Font font = new Font(baseFont, (float) fontsize);
 
         font.setColor(
                 data.getJSONArray("color").getInt(0),
@@ -163,11 +182,10 @@ public class Layout {
                 data.getJSONArray("color").getInt(2)
         );
 
-        ColumnText ct = new ColumnText(cb);
-
         text = text.replaceAll("<br[^>]*>", "\n");
         text = Normalizer.normalize(text, Normalizer.Form.NFKC);
-        Paragraph para = new Paragraph(text, font);
+        Chunk chunk = new Chunk(text, font);
+        Paragraph para = new Paragraph(chunk);
         int alignment = 0;
         if (data.getString("align").equals("left")) {
             alignment = Element.ALIGN_LEFT;
@@ -177,27 +195,122 @@ public class Layout {
             alignment = Element.ALIGN_RIGHT;
         }
         para.setAlignment(alignment);
+        para.setKeepTogether(true);
 
         float lineheight;
-        if (data.has("lineheight")) {
-            lineheight = (float) (data.getDouble("lineheight") * 1.15);
+        if (data.has("lineheight") || !isLegacy) {
+            lineheight = (float) (data.optDouble("lineheight", 1.0) * 1.15);
         } else {
             lineheight = 1;
         }
-        para.setLeading(lineheight * fontsize);
+        para.setLeading((float) (lineheight * fontsize));
+
+        float adheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, (float) fontsize) - baseFont.getDescentPoint(text + ",;gyjq", (float) fontsize)) + 0.0001);
+        float adheightPlusLH = adheight;
+        if (lineheight != 1) {
+            adheightPlusLH += (lineheight - 1.0) * fontsize;
+        }
+        return new ParagraphResult(para, fontsize, alignment, lineheight, adheightPlusLH, baseFont);
+    }
+
+    private void drawTextcontainer(JSONObject data, String text, PdfContentByte cb) throws IOException, DocumentException, JSONException {
+        float width = millimetersToPoints((float) (data.getDouble("width")));
+        float height = millimetersToPoints((float) (data.getDouble("height")));
+        boolean autoresize = data.optBoolean("autoresize", false);
+        double fontSize = data.getDouble("fontsize");
+
+        ParagraphResult para;
+        double realHeight, realWidth;
+        while (true) {
+            para = getParagraph(data, text, false, fontSize);
+
+            ColumnText ct = new ColumnText(cb);
+            ct.addElement(para.p);
+            ct.setSimpleColumn(
+                    0,
+                    0,
+                    width,
+                   3000000,
+                    (float) para.fontSize,
+                    para.alignment
+            );
+            ct.go(true);
+            realHeight = 3000000 - ct.getYLine();
+            realWidth = ct.getFilledWidth();
+
+            ct.getLinesWritten()
+
+            System.out.println("Text " + text + " font size " + fontSize + " height "  + realHeight + " target " + height + " width " + realWidth + " target " + width);
+            if (!autoresize || (realHeight <= height && realWidth <= width) || fontSize <= 1.0) {
+                break;
+            }
+            if (realHeight > height) {
+                fontSize -= Math.max(1.0, fontSize * 0.1);
+            } else {
+                fontSize -= Math.max(.25, fontSize * 0.025);
+            }
+        }
+
+        float lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom")));
+        float upperLeftY = lowerLeftY + height;
+        float lowerLeftX = millimetersToPoints((float) data.getDouble("left"));
+
+        cb.saveState();
+        cb.transform(AffineTransform.getTranslateInstance(lowerLeftX, upperLeftY));
+        cb.transform(AffineTransform.getRotateInstance(-data.optDouble("rotation", 0D) * 3.141592653589793D / 180.0D, 0, 0));
+
+        float yoff = 0;
+        if (data.optString("verticalalign", "top").equals("bottom")) {
+            yoff -= height - realHeight;
+        } else if (data.optString("verticalalign", "top").equals("middle")) {
+            yoff -= (height - realHeight) / 2;
+        }
+        yoff += (para.lineheight - 1.0) * para.fontSize; // for alignment with reportlab python rendering
+        System.out.println(data.toString() + " height: " + height + " realHeight: " + realHeight);
+
+        ColumnText ct = new ColumnText(cb);
+        ct.addElement(para.p);
+        ct.setSimpleColumn(
+                0,
+                -3000000,
+                width,
+                yoff,
+                (float) para.fontSize,
+                para.alignment
+        );
+        ct.go();
+
+        /*
+        Uncomment the following if you want to see the bounding box while debugging
+        */
+        cb.rectangle(
+                0,
+                0,
+                width,
+                -height
+        );
+        cb.setColorStroke(Color.BLUE);
+        cb.stroke();
+
+        cb.restoreState();
+    }
+
+    private void drawTextarea(JSONObject data, String text, PdfContentByte cb) throws IOException, DocumentException, JSONException {
+        ParagraphResult para = getParagraph(data, text, false, null);
+        ColumnText ct = new ColumnText(cb);
 
         // Position with lower bound of "x" instead of lower bound of text, to be consistent with other implementations
-        float ycorr = baseFont.getDescentPoint("x", fontsize) - baseFont.getDescentPoint(text + ",;gyjq", fontsize);
+        float ycorr = para.baseFont.getDescentPoint("x", (float) para.fontSize) - para.baseFont.getDescentPoint(text + ",;gyjq", (float) para.fontSize);
 
         // Simulate rendering to obtain real height
-        ct.addElement(para);
+        ct.addElement(para.p);
         ct.setSimpleColumn(
                 millimetersToPoints((float) data.getDouble("left")),
                 millimetersToPoints((float) data.getDouble("bottom")) + ycorr,
                 millimetersToPoints((float) (data.getDouble("left") + data.getDouble("width"))),
                 millimetersToPoints((float) (data.getDouble("bottom") + 3000)) + ycorr,
-                fontsize,
-                alignment
+                (float) para.fontSize,
+                para.alignment
         );
         ct.go(true);
 
@@ -210,24 +323,18 @@ public class Layout {
         float cos = (float) Math.cos(alpha);
         float sin = (float) Math.sin(alpha);
 
-        float adheight = (float) (Math.max(fontsize, baseFont.getAscentPoint(text, fontsize) - baseFont.getDescentPoint(text + ",;gyjq", fontsize)) + 0.0001);
-
-        float adheightPlusLH = adheight;
-        if (lineheight != 1) {
-            adheightPlusLH += (lineheight - 1.0) * fontsize;
-        }
-        ct.addElement(para);
+        ct.addElement(para.p);
         float lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom")));
-        float upperRightY = millimetersToPoints((float) (data.getDouble("bottom"))) + ct.getLinesWritten() * adheightPlusLH;
+        float upperRightY = millimetersToPoints((float) (data.getDouble("bottom"))) + ct.getLinesWritten() * para.adheightPlusLH;
         float lowerLeftX = millimetersToPoints((float) data.getDouble("left"));
-        float ycorrtop = baseFont.getAscentPoint("X", fontsize) - baseFont.getAscentPoint(text, fontsize);
+        float ycorrtop = para.baseFont.getAscentPoint("X", (float) para.fontSize) - para.baseFont.getAscentPoint(text, (float) para.fontSize);
         if (data.optBoolean("downward", false)) {
-            lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom"))) - ct.getLinesWritten() * adheightPlusLH;
+            lowerLeftY = millimetersToPoints((float) (data.getDouble("bottom"))) - ct.getLinesWritten() * para.adheightPlusLH;
             upperRightY = millimetersToPoints((float) data.getDouble("bottom"));
             ycorr = 0;
 
-            if (lineheight != 1) {
-                ycorr += (lineheight - 1.0) * fontsize;
+            if (para.lineheight != 1) {
+                ycorr += (para.lineheight - 1.0) * para.fontSize;
             }
 
         } else {
@@ -240,8 +347,8 @@ public class Layout {
                 lowerLeftY - upperRightY - ycorrtop + ycorr,
                 millimetersToPoints((float) data.getDouble("width")),
                 -ycorrtop + ycorr,
-                fontsize,
-                alignment
+                (float) para.fontSize,
+                para.alignment
         );
         ct.go();
 
@@ -324,6 +431,8 @@ public class Layout {
                         drawQrCode(obj, content, obj.optBoolean("nowhitespace", false), cb);
                     } else if (obj.getString("type").equals("textarea")) {
                         drawTextarea(obj, cp.getTextContent(obj.getString("content"), obj.optString("text", ""), obj.optJSONObject("text_i18n")), cb);
+                    } else if (obj.getString("type").equals("textcontainer")) {
+                        drawTextcontainer(obj, cp.getTextContent(obj.getString("content"), obj.optString("text", ""), obj.optJSONObject("text_i18n")), cb);
                     } else if (obj.getString("type").equals("imagearea")) {
                         drawImage(obj, cp.getImageContent(obj.getString("content")), cb);
                     } else if (obj.getString("type").equals("poweredby")) {
