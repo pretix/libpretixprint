@@ -107,27 +107,30 @@ class BidiProcessor(val text: String, val font: BaseFont, val fontSize: Float, v
             // not even a single char fit; must output the first char
             ++currentChar
             if (surrogate) ++currentChar
-            System.out.println("BREAK A")
             return LineResult.LINE_SPLIT_GRACEFULLY
         }
         if (currentChar >= text.length) {
             // there was more line than text
-            System.out.println("BREAK B")
             return LineResult.LINE_SPLIT_GRACEFULLY
         }
         var newCurrentChar: Int = trimRightEx(oldCurrentChar, currentChar - 1)
         if (newCurrentChar < oldCurrentChar) {
             // only WS
-            System.out.println("BREAK C")
             return LineResult.LINE_SPLIT_GRACEFULLY
         }
-        if (lastSplit == -1 || lastSplit >= newCurrentChar) {
-            // no split point or split point ahead of end
-            System.out.println("BREAK D")
+        if (lastSplit == -1) {
             return LineResult.LINE_SPLIT_FORCED
+        } else if (lastSplit >= newCurrentChar) {
+            // no split point or split point ahead of end
+            return LineResult.LINE_SPLIT_GRACEFULLY
         }
         // standard split
         currentChar = lastSplit + 1
+        newCurrentChar = trimRightEx(oldCurrentChar, lastSplit);
+        if (newCurrentChar < oldCurrentChar) {
+            // only WS again
+            newCurrentChar = currentChar - 1;
+        }
         return LineResult.LINE_SPLIT_GRACEFULLY
     }
 }

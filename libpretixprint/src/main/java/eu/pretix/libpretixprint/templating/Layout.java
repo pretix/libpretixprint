@@ -217,6 +217,7 @@ public class Layout {
     private void drawTextcontainer(JSONObject data, String text, PdfContentByte cb) throws IOException, DocumentException, JSONException {
         float width = millimetersToPoints((float) (data.getDouble("width")));
         float height = millimetersToPoints((float) (data.getDouble("height")));
+        float widthextension = 0;
         boolean autoresize = data.optBoolean("autoresize", false);
         double fontSize = data.getDouble("fontsize");
 
@@ -230,7 +231,7 @@ public class Layout {
             ct.setSimpleColumn(
                     0,
                     0,
-                    width,
+                    width + widthextension,
                    3000000,
                     (float) para.fontSize,
                     para.alignment
@@ -240,10 +241,14 @@ public class Layout {
             realWidth = ct.getFilledWidth();
 
             var smallEnough = (realHeight <= height && realWidth <= width);
-            if (autoresize && !data.optBoolean("splitlongwords", true)) {
-                smallEnough = smallEnough && !linesRequiredHardBreak(text, para.font, width);
+            if (!data.optBoolean("splitlongwords", true) && linesRequiredHardBreak(text, para.font, width + widthextension)) {
+                if (autoresize) {
+                    smallEnough = false;
+                } else {
+                    widthextension += millimetersToPoints(2);
+                    continue;
+                }
             }
-            System.out.println("Text " + text + " >font size " + fontSize + " height "  + realHeight + " target " + height + " width " + realWidth + " target " + width + " break " + linesRequiredHardBreak(text, para.font, width));
             if (!autoresize || smallEnough || fontSize <= 1.0) {
                 break;
             }
@@ -262,21 +267,25 @@ public class Layout {
         cb.transform(AffineTransform.getTranslateInstance(lowerLeftX, upperLeftY));
         cb.transform(AffineTransform.getRotateInstance(-data.optDouble("rotation", 0D) * 3.141592653589793D / 180.0D, 0, 0));
 
-        float yoff = 0;
+        float yoff = 0, xoff = 0;
         if (data.optString("verticalalign", "top").equals("bottom")) {
             yoff -= height - realHeight;
         } else if (data.optString("verticalalign", "top").equals("middle")) {
             yoff -= (height - realHeight) / 2;
         }
+        if (data.optString("align", "left").equals("center")) {
+            xoff -= widthextension / 2;
+        } else if (data.optString("align", "left").equals("right")) {
+            xoff -= widthextension;
+        }
         yoff += (para.lineheight - 1.0) * para.fontSize; // for alignment with reportlab python rendering
-        System.out.println(data.toString() + " height: " + height + " realHeight: " + realHeight);
 
         ColumnText ct = new ColumnText(cb);
         ct.addElement(para.p);
         ct.setSimpleColumn(
-                0,
+                xoff,
                 -3000000,
-                width,
+                xoff + width + widthextension,
                 yoff,
                 (float) para.fontSize,
                 para.alignment
