@@ -294,7 +294,6 @@ public class Layout {
 
         /*
         Uncomment the following if you want to see the bounding box while debugging
-        */
         cb.rectangle(
                 0,
                 0,
@@ -303,6 +302,7 @@ public class Layout {
         );
         cb.setColorStroke(Color.BLUE);
         cb.stroke();
+        */
 
         cb.restoreState();
     }
