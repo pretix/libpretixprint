@@ -5,9 +5,8 @@ import com.lowagie.text.Utilities
 import com.lowagie.text.pdf.BaseFont
 import com.lowagie.text.pdf.BidiLine
 import com.lowagie.text.pdf.PdfChunk
-import com.lowagie.text.pdf.PdfWriter
 
-fun linesRequiredHardBreak(content: String, font: Font, rectangularWidth: Float): Boolean {
+fun linesRequireHardBreak(content: String, font: Font, rectangularWidth: Float): Boolean {
     // assuming no indents
     val currentValues = arrayOfNulls<Any>(2)
     currentValues[1] = 0.0f

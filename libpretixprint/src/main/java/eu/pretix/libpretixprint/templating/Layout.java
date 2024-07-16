@@ -24,7 +24,7 @@ import java.util.Map;
 
 import static com.lowagie.text.Utilities.millimetersToInches;
 import static com.lowagie.text.Utilities.millimetersToPoints;
-import static eu.pretix.libpretixprint.templating.TextUtilsKt.linesRequiredHardBreak;
+import static eu.pretix.libpretixprint.templating.TextUtilsKt.linesRequireHardBreak;
 
 public class Layout {
     private JSONArray elements;
@@ -241,7 +241,7 @@ public class Layout {
             realWidth = ct.getFilledWidth();
 
             var smallEnough = (realHeight <= height && realWidth <= width);
-            if (!data.optBoolean("splitlongwords", true) && linesRequiredHardBreak(text, para.font, width + widthextension)) {
+            if (!data.optBoolean("splitlongwords", true) && linesRequireHardBreak(text, para.font, width + widthextension)) {
                 if (autoresize) {
                     smallEnough = false;
                 } else {
