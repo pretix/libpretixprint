@@ -3,6 +3,7 @@ version '1.0'
 
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
+apply plugin: 'kotlin'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -40,3 +41,9 @@ dependencies {
 
     testImplementation 'junit:junit:4.12'
 }
+
+task copyTestResources(type: Copy) {
+    from "${projectDir}/src/test/resources", "${projectDir}/src/main/resources"
+    into "${buildDir}/classes/test"
+}
+processTestResources.dependsOn copyTestResources
