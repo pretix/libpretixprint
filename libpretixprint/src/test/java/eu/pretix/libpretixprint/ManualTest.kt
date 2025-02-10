@@ -46,4 +46,40 @@ class ManualTest() {
         l.render(outfile.absolutePathString())
         System.out.println("Out: " + outfile.absolutePathString())
     }
+
+    @Test
+    fun testQRCode() {
+        val testData = "[{\"type\":\"barcodearea\",\"page\":1,\"left\":\"12.00\",\"bottom\":\"250.05\",\"size\":\"30.00\",\"content\":\"secret\",\"text\":\"\",\"text_i18n\":{},\"nowhitespace\":true,\"color\":[0,0,0,1]},{\"type\":\"textcontainer\",\"page\":1,\"locale\":\"\",\"left\":\"12.70\",\"bottom\":\"280.61\",\"fontsize\":\"13.0\",\"lineheight\":\"1\",\"color\":[0,0,0,1],\"fontfamily\":\"Open Sans\",\"bold\":false,\"italic\":false,\"width\":\"38.11\",\"height\":\"3.68\",\"content\":\"other\",\"text\":\"Black 30mm gapless\",\"text_i18n\":{},\"rotation\":0,\"align\":\"left\",\"verticalalign\":\"middle\",\"autoresize\":true,\"splitlongwords\":true},{\"type\":\"barcodearea\",\"page\":1,\"left\":\"72.00\",\"bottom\":\"250.05\",\"size\":\"30.00\",\"content\":\"secret\",\"text\":\"\",\"text_i18n\":{},\"nowhitespace\":true,\"color\":[255,0,0,1]},{\"type\":\"textcontainer\",\"page\":1,\"locale\":\"\",\"left\":\"72.70\",\"bottom\":\"280.61\",\"fontsize\":\"13.0\",\"lineheight\":\"1\",\"color\":[0,0,0,1],\"fontfamily\":\"Open Sans\",\"bold\":false,\"italic\":false,\"width\":\"38.11\",\"height\":\"3.68\",\"content\":\"other\",\"text\":\"Red 30mm gapless\",\"text_i18n\":{},\"rotation\":0,\"align\":\"left\",\"verticalalign\":\"middle\",\"autoresize\":true,\"splitlongwords\":true},{\"type\":\"barcodearea\",\"page\":1,\"left\":\"132.00\",\"bottom\":\"250.05\",\"size\":\"30.00\",\"content\":\"secret\",\"text\":\"\",\"text_i18n\":{},\"nowhitespace\":true,\"color\":[59,28,74,1]},{\"type\":\"textcontainer\",\"page\":1,\"locale\":\"\",\"left\":\"132.70\",\"bottom\":\"280.61\",\"fontsize\":\"13.0\",\"lineheight\":\"1\",\"color\":[0,0,0,1],\"fontfamily\":\"Open Sans\",\"bold\":false,\"italic\":false,\"width\":\"38.11\",\"height\":\"3.68\",\"content\":\"other\",\"text\":\"Purple 30mm gapless\",\"text_i18n\":{},\"rotation\":0,\"align\":\"left\",\"verticalalign\":\"middle\",\"autoresize\":true,\"splitlongwords\":true},{\"type\":\"barcodearea\",\"page\":1,\"left\":\"12.00\",\"bottom\":\"210.05\",\"size\":\"30.00\",\"content\":\"secret\",\"text\":\"tdmruoekvkpbv1o2mv8xccvqcikvr58u\",\"text_i18n\":{},\"nowhitespace\":false},{\"type\":\"textcontainer\",\"page\":1,\"locale\":\"\",\"left\":\"12.70\",\"bottom\":\"240.61\",\"fontsize\":\"13.0\",\"lineheight\":\"1\",\"color\":[0,0,0,1],\"fontfamily\":\"Open Sans\",\"bold\":false,\"italic\":false,\"width\":\"38.11\",\"height\":\"3.68\",\"content\":\"other\",\"text\":\"Black 30mm\",\"text_i18n\":{},\"rotation\":0,\"align\":\"left\",\"verticalalign\":\"middle\",\"autoresize\":true,\"splitlongwords\":true},{\"type\":\"barcodearea\",\"page\":1,\"left\":\"72.00\",\"bottom\":\"210.05\",\"size\":\"30.00\",\"content\":\"secret\",\"text\":\"tdmruoekvkpbv1o2mv8xccvqcikvr58u\",\"text_i18n\":{},\"nowhitespace\":false,\"color\":[255,0,0,1]},{\"type\":\"textcontainer\",\"page\":1,\"locale\":\"\",\"left\":\"72.70\",\"bottom\":\"240.61\",\"fontsize\":\"13.0\",\"lineheight\":\"1\",\"color\":[0,0,0,1],\"fontfamily\":\"Open Sans\",\"bold\":false,\"italic\":false,\"width\":\"38.11\",\"height\":\"3.68\",\"content\":\"other\",\"text\":\"Red 30mm\",\"text_i18n\":{},\"rotation\":0,\"align\":\"left\",\"verticalalign\":\"middle\",\"autoresize\":true,\"splitlongwords\":true},{\"type\":\"barcodearea\",\"page\":1,\"left\":\"132.00\",\"bottom\":\"210.05\",\"size\":\"30.00\",\"content\":\"secret\",\"text\":\"tdmruoekvkpbv1o2mv8xccvqcikvr58u\",\"text_i18n\":{},\"nowhitespace\":false,\"color\":[59,28,74,1]},{\"type\":\"textcontainer\",\"page\":1,\"locale\":\"\",\"left\":\"132.70\",\"bottom\":\"240.61\",\"fontsize\":\"13.0\",\"lineheight\":\"1\",\"color\":[0,0,0,1],\"fontfamily\":\"Open Sans\",\"bold\":false,\"italic\":false,\"width\":\"38.11\",\"height\":\"3.68\",\"content\":\"other\",\"text\":\"Purple 30mm\",\"text_i18n\":{},\"rotation\":0,\"align\":\"left\",\"verticalalign\":\"middle\",\"autoresize\":true,\"splitlongwords\":true},{\"type\":\"barcodearea\",\"page\":1,\"left\":\"12.00\",\"bottom\":\"170.05\",\"size\":\"30.00\",\"content\":\"other\",\"text\":\"YES I AM A QR CODE\",\"text_i18n\":{},\"nowhitespace\":true,\"color\":[0,0,0,1]},{\"type\":\"textcontainer\",\"page\":1,\"locale\":\"\",\"left\":\"12.70\",\"bottom\":\"200.61\",\"fontsize\":\"13.0\",\"lineheight\":\"1\",\"color\":[0,0,0,1],\"fontfamily\":\"Open Sans\",\"bold\":false,\"italic\":false,\"width\":\"38.11\",\"height\":\"3.68\",\"content\":\"other\",\"text\":\"Static content\",\"text_i18n\":{},\"rotation\":0,\"align\":\"left\",\"verticalalign\":\"middle\",\"autoresize\":true,\"splitlongwords\":true}]"
+        FontRegistry.getInstance().add("Open Sans", FontSpecification.Style.REGULAR, getResource("fonts/OpenSans-Regular.ttf")!!.path)
+        FontRegistry.getInstance().add("Open Sans", FontSpecification.Style.BOLD, getResource("fonts/OpenSans-Bold.ttf")!!.path)
+        FontRegistry.getInstance().add("Open Sans", FontSpecification.Style.BOLDITALIC, getResource("fonts/OpenSans-BoldItalic.ttf")!!.path)
+        FontRegistry.getInstance().add("Open Sans", FontSpecification.Style.ITALIC, getResource("fonts/OpenSans-Italic.ttf")!!.path)
+        System.out.println(getResource("fonts/OpenSans-Regular.ttf")!!.path)
+        val cp: ContentProvider = object : ContentProvider {
+            override fun getTextContent(content: String, text: String?, textI18n: JSONObject?): String {
+                return text ?: content
+            }
+
+            override fun getBarcodeContent(content: String, text: String?, textI18n: JSONObject?): String {
+                if (content == "other") {
+                    return text ?: content
+                }
+                return "NoY+a0uDu1436Jba8PpV5slMJkCz1zH0R/2x+qIG+PLVCFJjlMwL/TPZhrmtfO/4RqbITBwprlG2l+Up7p8e8CAMAgyApCxbql2NxpWO0JVCKAEASAQA"
+            }
+
+            override fun getImageContent(content: String): InputStream {
+                throw NotImplementedError()
+            }
+        }
+        val i: MutableList<ContentProvider> = ArrayList()
+        i.add(cp)
+        val l = Layout(
+            JSONArray(testData),
+            getResource("bg-a4-empty.pdf")!!.file,
+            i.iterator()
+        )
+        val outfile = Path(javaClass.getResource("/").path, "qrcode-test.pdf")
+        l.render(outfile.absolutePathString())
+        System.out.println("Out: " + outfile.absolutePathString())
+    }
 }

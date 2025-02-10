@@ -6,8 +6,10 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.codec.CCITTG4Encoder;
 
+import java.awt.Color;
 import java.util.Map;
 
 public class BarcodeQR {
@@ -57,5 +59,32 @@ public class BarcodeQR {
 
     public Rectangle getBarcodeSize() {
         return new Rectangle(0, 0, bitMatrix.getWidth(), bitMatrix.getHeight());
+    }
+
+    public void placeBarcode(PdfContentByte cb, Color barColor, float left, float bottom, float width, float height) {
+        cb.saveState();
+        cb.setColorFill(barColor);
+
+        int bitWidth = bitMatrix.getWidth();
+        int bitHeight = bitMatrix.getHeight();
+        float moduleWidth = width / bitWidth;
+        float moduleHeight = height / bitHeight;
+
+        for (int y = 0; y < bitHeight; ++y) {
+            for (int x = 0; x < bitWidth; ++x) {
+                if (bitMatrix.get(x, y)) {
+
+                    cb.rectangle(
+                            left + x * moduleWidth,
+                            bottom + height - (y - 1) * moduleHeight,
+                            moduleWidth,
+                            moduleHeight
+                    );
+                }
+            }
+        }
+
+        cb.fill();
+        cb.restoreState();
     }
 }
