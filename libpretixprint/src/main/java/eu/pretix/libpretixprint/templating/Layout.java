@@ -129,13 +129,24 @@ public class Layout {
                     hints
             );
         }
+
+        Color color = Color.BLACK;
+        if (data.has("color")) {
+            color = new Color(
+                    data.getJSONArray("color").getInt(0),
+                    data.getJSONArray("color").getInt(1),
+                    data.getJSONArray("color").getInt(2)
+            );
+        }
+
         float size = millimetersToPoints((float) data.getDouble("size"));
-        Image img = bqr.getImage();
-        img.scaleToFit(size, size);
-        cb.addImage(
-                img, img.getScaledWidth(), 0, 0, img.getScaledHeight(),
+        bqr.placeBarcode(
+                cb,
+                color,
                 millimetersToPoints((float) data.getDouble("left")),
-                millimetersToPoints((float) data.getDouble("bottom"))
+                millimetersToPoints((float) data.getDouble("bottom")),
+                size,
+                size
         );
     }
 
