@@ -140,13 +140,17 @@ public class Layout {
         }
 
         float size = millimetersToPoints((float) data.getDouble("size"));
-        bqr.placeBarcode(
+        Image img = bqr.createImageWithBarcode(
                 cb,
                 color,
-                millimetersToPoints((float) data.getDouble("left")),
-                millimetersToPoints((float) data.getDouble("bottom")),
                 size,
                 size
+        );
+        img.scaleToFit(size, size);
+        cb.addImage(
+                img, img.getScaledWidth(), 0, 0, img.getScaledHeight(),
+                millimetersToPoints((float) data.getDouble("left")),
+                millimetersToPoints((float) data.getDouble("bottom"))
         );
     }
 

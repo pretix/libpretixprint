@@ -7,9 +7,11 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfContentByte;
+import com.lowagie.text.pdf.PdfTemplate;
 import com.lowagie.text.pdf.codec.CCITTG4Encoder;
 
 import java.awt.Color;
+
 import java.util.Map;
 
 public class BarcodeQR {
@@ -86,5 +88,48 @@ public class BarcodeQR {
 
         cb.fill();
         cb.restoreState();
+    }
+
+    public Rectangle placeBarcode(PdfContentByte cb, Color barColor, float width, float height) {
+        cb.setColorFill(barColor);
+
+        int bitWidth = bitMatrix.getWidth();
+        int bitHeight = bitMatrix.getHeight();
+        float moduleWidth = width / bitWidth;
+        float moduleHeight = height / bitHeight;
+
+        for (int y = 0; y < bitHeight; ++y) {
+            for (int x = 0; x < bitWidth; ++x) {
+                if (bitMatrix.get(x, y)) {
+
+                    cb.rectangle(
+                            x * moduleWidth,
+                            height - (y - 1) * moduleHeight,
+                            moduleWidth,
+                            moduleHeight
+                    );
+                }
+            }
+        }
+
+        cb.fill();
+
+        return getBarcodeSize();
+    }
+
+    public PdfTemplate createTemplateWithBarcode(PdfContentByte cb, Color barColor, float width, float height) {
+        PdfTemplate tp = cb.createTemplate(0, 0);
+        Rectangle rect = placeBarcode(tp, barColor, width, height);
+        tp.setBoundingBox(rect);
+        return tp;
+    }
+
+    public Image createImageWithBarcode(PdfContentByte cb, Color barColor, float width, float height) {
+        try {
+            return Image.getInstance(createTemplateWithBarcode(cb, barColor, width, height));
+        } catch (Exception e) {
+            throw new ExceptionConverter(e);
+        }
+
     }
 }
