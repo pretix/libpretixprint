@@ -130,6 +130,7 @@ public class Layout {
             );
         }
 
+        float size = millimetersToPoints((float) data.getDouble("size"));
         Color color = Color.BLACK;
         if (data.has("color")) {
             color = new Color(
@@ -139,15 +140,29 @@ public class Layout {
             );
         }
 
-        float size = millimetersToPoints((float) data.getDouble("size"));
-        bqr.placeBarcode(
-                cb,
-                color,
-                millimetersToPoints((float) data.getDouble("left")),
-                millimetersToPoints((float) data.getDouble("bottom")),
-                size,
-                size
-        );
+        if (color.getRed() == 0 && color.getGreen() == 0 && color.getBlue() == 0) {
+            // Use faster implementation for black
+            Image img = bqr.getImage();
+            img.scaleToFit(size, size);
+            cb.addImage(
+                    img, img.getScaledWidth(), 0, 0, img.getScaledHeight(),
+                    millimetersToPoints((float) data.getDouble("left")),
+                    millimetersToPoints((float) data.getDouble("bottom"))
+            );
+        } else {
+            Image img = bqr.createImageWithBarcode(
+                    cb,
+                    color,
+                    size,
+                    size
+            );
+            img.scaleToFit(size, size);
+            cb.addImage(
+                    img, img.getScaledWidth(), 0, 0, img.getScaledHeight(),
+                    millimetersToPoints((float) data.getDouble("left")),
+                    millimetersToPoints((float) data.getDouble("bottom"))
+            );
+        }
     }
 
     static class ParagraphResult {
