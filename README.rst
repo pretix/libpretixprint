@@ -7,7 +7,7 @@ libpretixprint
 .. image:: https://codecov.io/gh/pretix/libpretixprint/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/pretix/libpretixprint
 
-This is a shared library between `pretixdroid`_ and `pretixdesk`_. It handles all business logic
+This is a shared library between `pretixprint-android`_ and `pretixscan-desktop`_. It handles all business logic
 related to generating and printing PDF files.
 
 Release cycle
@@ -39,7 +39,7 @@ This project is 100 percent free and open source software. If you are interested
 commercial support, hosting services or supporting this project financially, please 
 go to `pretix.eu`_ or contact Raphael directly.
 
-.. _pretixdroid: https://github.com/pretix/pretixdroid
-.. _pretixdesk: https://github.com/pretix/pretixdesk
+.. _pretixprint-android: https://github.com/pretix/pretixprint-android
+.. _pretixscan-desktop: https://github.com/pretix/pretixscan-desktop
 .. _pretix.eu: https://pretix.eu
 .. _Code of Conduct: https://docs.pretix.eu/en/latest/development/contribution/codeofconduct.html
