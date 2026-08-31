@@ -1,0 +1,16 @@
+[versions]
+json = "20090211" # Use older org.json version to have an environment equivalent to the android platform
+junit = "4.12"
+kotlin = "2.2.21"
+openpdf = "1.3.24"
+zxing = "3.3.3"
+
+[libraries]
+json = { module = "org.json:json", version.ref = "json" }
+junit = { module = "junit:junit", version.ref = "junit" }
+openpdf = { module = "com.github.librepdf:openpdf", version.ref = "openpdf" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+zxing-javase = { module = "com.google.zxing:javase", version.ref = "zxing" } # used in parent android projects
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
