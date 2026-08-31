@@ -1,12 +1,6 @@
 libpretixprint
 ==============
 
-.. image:: https://travis-ci.org/pretix/libpretixprint.svg?branch=master
-   :target: https://travis-ci.org/pretix/libpretixprint
-
-.. image:: https://codecov.io/gh/pretix/libpretixprint/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/pretix/libpretixprint
-
 This is a shared library between `pretixprint-android`_ and `pretixscan-desktop`_. It handles all business logic
 related to generating and printing PDF files.
 
