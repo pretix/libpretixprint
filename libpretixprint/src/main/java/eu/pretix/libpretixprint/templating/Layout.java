@@ -26,6 +26,7 @@ import static com.lowagie.text.Utilities.millimetersToInches;
 import static com.lowagie.text.Utilities.millimetersToPoints;
 import static eu.pretix.libpretixprint.templating.TextUtilsKt.linesRequireHardBreak;
 
+
 public class Layout {
     private JSONArray elements;
     private InputStream backgroundInputStream;
@@ -182,8 +183,41 @@ public class Layout {
             this.font = font;
         }
     }
+    private boolean fontSupportsText(BaseFont font, String text) {
+        final int len = text.length();
+        int codepoint;
+        for (int offset = 0; offset < len; offset += Character.charCount(codepoint)) {
+            codepoint = text.codePointAt(offset);
+            if (!font.charExists(codepoint)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private BaseFont findFontSupportingText(String text, BaseFont preferredFont, FontSpecification.Style preferredStyle) {
+        FontRegistry fontRegistry = FontRegistry.getInstance();
+        if (fontSupportsText(preferredFont, text)) {
+            return preferredFont;
+        }
+        for (BaseFont font: fontRegistry.getFonts(preferredStyle)) {
+            if (fontSupportsText(font, text)) {
+                return font;
+            }
+        }
+        for (BaseFont font: fontRegistry.getFonts()) {
+            if (fontSupportsText(font, text)) {
+                return font;
+            }
+        }
+        // no sufficient font was found, use preferredFont
+        return preferredFont;
+    }
 
     private ParagraphResult getParagraph(JSONObject data, String text, boolean isLegacy, Double overrideFontSize) throws JSONException {
+        text = text.replaceAll("<br[^>]*>", "\n");
+        text = Normalizer.normalize(text, Normalizer.Form.NFKC);
+
         FontSpecification.Style style = FontSpecification.Style.REGULAR;
         if (data.getBoolean("bold") && data.getBoolean("italic")) {
             style = FontSpecification.Style.BOLDITALIC;
@@ -201,16 +235,14 @@ public class Layout {
             System.out.print("Unable to load font " + data.getString("fontfamily"));
             baseFont = fontRegistry.get("Open Sans", style);
         }
+        baseFont = findFontSupportingText(text, baseFont, style);
         Font font = new Font(baseFont, (float) fontsize);
-
         font.setColor(
                 data.getJSONArray("color").getInt(0),
                 data.getJSONArray("color").getInt(1),
                 data.getJSONArray("color").getInt(2)
         );
 
-        text = text.replaceAll("<br[^>]*>", "\n");
-        text = Normalizer.normalize(text, Normalizer.Form.NFKC);
         Chunk chunk = new Chunk(text, font);
         Paragraph para = new Paragraph(chunk);
         int alignment = 0;
