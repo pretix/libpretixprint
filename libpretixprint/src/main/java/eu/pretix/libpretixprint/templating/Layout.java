@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
@@ -416,6 +417,60 @@ public class Layout {
             throws Exception {
         render(new FileOutputStream(filename));
     }
+    private static class PdfPageInfo {
+        double[] transformation;
+        Rectangle pageSize;
+
+        public PdfPageInfo(double[] transformation, Rectangle pageSize) {
+            this.transformation = transformation;
+            this.pageSize = pageSize;
+        }
+    }
+    private PdfPageInfo getPageInfo(PdfReader reader, int pagenum) throws Exception {
+        // get visible area (intersection of MediaBox and CropBox)
+        Rectangle cropBox = reader.getCropBox(pagenum);
+        Rectangle mediaBox = reader.getPageSize(pagenum);
+        Point2D lower_left = new Point2D.Double(Math.max(cropBox.getLeft(), mediaBox.getLeft()), Math.max(cropBox.getBottom(), mediaBox.getBottom()));
+        Point2D upper_right = new Point2D.Double(Math.min(cropBox.getRight(), mediaBox.getRight()), Math.min(cropBox.getTop(), mediaBox.getTop()));
+        if ((lower_left.getX() >= upper_right.getX()) || (lower_left.getY() >= upper_right.getY())) {
+            throw new Exception("PDF has invalid media/cropbox (no visible content)");
+        }
+        AffineTransform transform = new AffineTransform();
+
+        int pageRotation = reader.getPageRotation(pagenum);
+        transform.quadrantRotate(-pageRotation/90);
+
+        // translate visible area origin to (0,0)
+        // necessary if we rotated above OR lower_left never was (0,0) to begin with
+        Point2D llr = transform.transform(lower_left, null);
+        Point2D urr = transform.transform(upper_right, null);
+        double offset_left = Math.min(llr.getX(), urr.getX());
+        double offset_bottom = Math.min(llr.getY(), urr.getY());
+        transform.preConcatenate(AffineTransform.getTranslateInstance(-offset_left, -offset_bottom));
+
+        // calculate new page size
+        transform.transform(lower_left, lower_left);
+        transform.transform(upper_right, upper_right);
+        Rectangle pageSize = new Rectangle(
+                (float) Math.min(lower_left.getX(), upper_right.getX()),
+                (float) Math.min(lower_left.getY(), upper_right.getY()),
+                (float) Math.max(lower_left.getX(), upper_right.getX()),
+                (float) Math.max(lower_left.getY(), upper_right.getY())
+        );
+
+        double[] tm = new double[6];
+        transform.getMatrix(tm);
+        return new PdfPageInfo(tm, pageSize);
+    }
+    private void initPage(Document document, PdfReader reader, PdfContentByte cb, PdfWriter writer, int pagenum) throws Exception {
+        if (reader == null) {
+            drawWhiteBackground(document.getPageSize(), cb);
+        } else {
+            PdfPageInfo pageInfo = getPageInfo(reader, pagenum + 1);
+            drawWhiteBackground(document.getPageSize(), cb);
+            cb.addTemplate(writer.getImportedPage(reader, pagenum + 1), (float) pageInfo.transformation[0], (float) pageInfo.transformation[1], (float) pageInfo.transformation[2], (float) pageInfo.transformation[3], (float) pageInfo.transformation[4], (float) pageInfo.transformation[5]);
+        }
+    }
 
     public void render(OutputStream os)
             throws Exception {
@@ -426,8 +481,8 @@ public class Layout {
             if (reader.getNumberOfPages() < 1) {
                 throw new Exception("Background PDF does not have a first page.");
             }
-
-            document = new Document(reader.getPageSize(1));
+            PdfPageInfo firstPageInfo = getPageInfo(reader, 1);
+            document = new Document(firstPageInfo.pageSize);
         } else {
             document = new Document(new RectangleReadOnly(
                     default_width,
@@ -448,16 +503,14 @@ public class Layout {
                 if (firstPage) {
                     firstPage = false;
                 } else {
+                    if (reader != null) {
+                        PdfPageInfo pageInfo = getPageInfo(reader, pagenum + 1);
+                        document.setPageSize(pageInfo.pageSize);
+                    }
                     document.newPage();
                 }
 
-                if (reader != null) {
-                    document.setPageSize(reader.getPageSize(pagenum + 1));
-                }
-                drawWhiteBackground(document.getPageSize(), cb);
-                if (reader != null) {
-                    cb.addTemplate(writer.getImportedPage(reader, pagenum + 1), 0, 0);
-                }
+                initPage(document, reader, cb, writer, pagenum);
 
                 for (int i = 0; i < elements.length(); i++) {
                     JSONObject obj = elements.getJSONObject(i);
