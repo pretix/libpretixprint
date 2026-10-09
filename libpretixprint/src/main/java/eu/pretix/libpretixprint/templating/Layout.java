@@ -417,6 +417,7 @@ public class Layout {
             throws Exception {
         render(new FileOutputStream(filename));
     }
+
     private static class PdfPageInfo {
         double[] transformation;
         Rectangle pageSize;
@@ -426,6 +427,7 @@ public class Layout {
             this.pageSize = pageSize;
         }
     }
+
     private PdfPageInfo getPageInfo(PdfReader reader, int pagenum) throws Exception {
         // get visible area (intersection of MediaBox and CropBox)
         Rectangle cropBox = reader.getCropBox(pagenum);
@@ -469,6 +471,7 @@ public class Layout {
         transform.getMatrix(tm);
         return new PdfPageInfo(tm, pageSize);
     }
+
     private void initPage(Document document, PdfReader reader, PdfContentByte cb, PdfWriter writer, int pagenum) throws Exception {
         if (reader == null) {
             drawWhiteBackground(document.getPageSize(), cb);
