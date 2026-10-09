@@ -438,7 +438,14 @@ public class Layout {
         AffineTransform transform = new AffineTransform();
 
         int pageRotation = reader.getPageRotation(pagenum);
-        transform.quadrantRotate(-pageRotation/90);
+        double sin = 0, cos = 0;
+        switch ((-pageRotation/90) % 4) {
+            case 0: sin = 0; cos = 1; break;
+            case 1: sin = 1; cos = 0; break;
+            case 2: sin = 0; cos = -1; break;
+            case 3: sin = -1; cos = 0; break;
+        }
+        transform.setTransform(cos, -sin, sin, cos, 0, 0);
 
         // translate visible area origin to (0,0)
         // necessary if we rotated above OR lower_left never was (0,0) to begin with
