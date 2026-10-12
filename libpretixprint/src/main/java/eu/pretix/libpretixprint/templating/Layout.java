@@ -478,7 +478,14 @@ public class Layout {
         } else {
             PdfPageInfo pageInfo = getPageInfo(reader, pagenum + 1);
             drawWhiteBackground(document.getPageSize(), cb);
-            cb.addTemplate(writer.getImportedPage(reader, pagenum + 1), (float) pageInfo.transformation[0], (float) pageInfo.transformation[1], (float) pageInfo.transformation[2], (float) pageInfo.transformation[3], (float) pageInfo.transformation[4], (float) pageInfo.transformation[5]);
+            cb.addTemplate(
+                    writer.getImportedPage(reader, pagenum + 1),
+                    (float) pageInfo.transformation[0],
+                    (float) pageInfo.transformation[1],
+                    (float) pageInfo.transformation[2],
+                    (float) pageInfo.transformation[3],
+                    // translation must be 0, as PdfImportedPage already translates the page by itself
+                    0, 0);
         }
     }
 
