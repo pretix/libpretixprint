@@ -1,8 +1,17 @@
 package eu.pretix.libpretixprint.templating;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
-public class FontSpecification {
+public class FontSpecification implements Comparable<FontSpecification> {
+    @Override
+    public int compareTo(@NotNull FontSpecification o) {
+        if (equals(o)) return 0;
+        if (name.compareTo(o.name) != 0) return name.compareTo(o.name);
+        return style.compareTo(o.style);
+    }
+
     public enum Style {
         REGULAR, ITALIC, BOLD, BOLDITALIC
     }
